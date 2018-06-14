@@ -137,6 +137,8 @@ Interesting enough there is only one small change to turn this function into a m
   }
 ```
 
+## DELETE Routes
+
 Great! We now have a way to handle our routes, and have handled a couple of them. Let's continue by creating the rest of the logic we need to complete the rest of the route methods PUT, POST, and DELETE.
 ```php
     /*
