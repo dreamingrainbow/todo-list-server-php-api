@@ -1,4 +1,11 @@
 <?php
+
+class Todo {
+    public $todo;
+    public $completed;
+    public $created;
+}
+
 /*
 *   CLASS TodoListAPI
 *   Create and manage a todo list with PHP.
@@ -6,13 +13,14 @@
 class TodoListAPI {
     public function __construct() { 
       $this->method = $_SERVER['REQUEST_METHOD'];
-      $todo["todo"] = 'Create a todo list api server in PHP.';
-      $todo["completed"] = false;
-      $todo["created"] = time();
+      $todo = new Todo();
+      $todo->todo = 'Create a todo list api server in PHP.';
+      $todo->completed = null;
+      $todo->created = time() * 1000;
       $this->todoList = [ $todo ];
     }
     
-    public function init() { 
+    public function init() {         
         if('GET' === $this->method) {
           $this->getRoutes();
         } else if('POST' === $this->method) {
@@ -49,7 +57,7 @@ class TodoListAPI {
         switch($path) {
           case '/todo-list':
             header('Content-Type: application/json');
-            echo json_encode($this->todoList); /* We just need to reference our class instance.*/
+            echo json_encode(['todoList' => $this->todoList]); /* We just need to reference our class instance.*/
             break;
           default:
             echo('<h1>Todo List API</h1>');
@@ -62,39 +70,38 @@ class TodoListAPI {
     */
     public function deleteRoutes() {
         $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        switch($path) {
-            case '/todo':
+        $pathArray = explode('/', $path);
+        array_shift($pathArray);
+        switch($pathArray[0]) {
+            case 'todo':
             default:
-                $delete = file_get_contents('php://input');
-                $delete = json_decode($delete);
-                $this->todoIndex = $delete->todoIndex; 
-                if( isset($delete->todoIndex)
-                     && is_numeric($delete->todoIndex) ) {
-                        header('Content-Type: application/json');
+                $this->todoIndex = (int)$pathArray[1]; 
+                if( isset($this->todoIndex) && is_numeric($this->todoIndex) ) {
                         $this->todoList = array_filter($this->todoList, function($k){ return($k !== $this->todoIndex); }, ARRAY_FILTER_USE_KEY );
-                        echo json_encode($this->todoList); /* We just need to reference our class instance.*/
+                        echo json_encode($this->todoList); // We just need to reference our class instance.
                 } else {
-                    header('Content-Type: application/json');
-                    echo json_decode($this->todoList);
+                    echo json_encode($this->todoList);
                 }
+            
         }
     }
-
 
     /*
      *  postRoutes Handle all of the POST route requests  
      */
     public function postRoutes() {
         $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        switch($path) {
-            case '/todo':
+        $pathArray = explode('/', $path);
+        array_shift($pathArray);
+        switch($pathArray[0]) {
+            case 'todo':
             default:
                 $post = file_get_contents('php://input');
                 $post = json_decode($post);
-                $this->todo = $_POST->todo; 
+                $this->todo = $post->todo; 
                 array_push($this->todoList, $this->todo);
                 header('Content-Type: application/json');
-                echo json_decode($this->todoList);
+                echo json_encode($this->todoList);
         }
     }
 
@@ -103,18 +110,23 @@ class TodoListAPI {
     */
     public function putRoutes() {
         $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        switch($path) {
-            case '/todo':
+        $pathArray = explode('/', $path);
+        array_shift($pathArray);
+        switch($pathArray[0]) {
+            case 'todo':
             default:
-                $put = file_get_contents('php://input');
-                $put = json_decode($put);
-                $this->todoIndex = $put->todoIndex;
-                $this->todoList[$this->todoIndex]['completed'] = time();
-                header('Content-Type: application/json');
+                $this->todoIndex = (int)$pathArray[1];
+                $this->todoList[$this->todoIndex]->completed =  time() * 1000;
+                header('Content-Type: application/json');                
                 echo json_encode($this->todoList);
+            
         }
     }
 }
-  
+
+header('Access-Control-Allow-Origin: http://localhost:3000');
+header("Access-Control-Allow-Methods : POST, GET, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers : Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+            
 $todoListServer = new TodoListAPI();
 $todoListServer->init();
