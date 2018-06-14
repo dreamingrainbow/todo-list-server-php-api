@@ -237,7 +237,9 @@ First we do the logic in a functional programming style.
         }
     }
  ```
- 
+
+## PUT Routes
+
 Now we can add our todo's to our todo list. Only thing left to do is update our todo once we have completed it.
 
 ```php
