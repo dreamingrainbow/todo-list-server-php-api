@@ -20,6 +20,7 @@ Inside our www folder we can create our `index.php` file. It will contain the lo
 /**
 *     We setup our file to handle the request method.
 */
+$todoList = [];
 $method = $_SERVER['REQUEST_METHOD'];
 ```
 
@@ -137,35 +138,145 @@ Interesting enough there is only one small change to turn this function into a m
 ```
 
 Great! We now have a way to handle our routes, and have handled a couple of them. Let's continue by creating the rest of the logic we need to complete the rest of the route methods PUT, POST, and DELETE.
-
-
 ```php
-  /*
-  *   deleteRoutes Handle any delete method route requests.
-  */
+    /*
+    *   deleteRoutes Handle any delete route requests.
+    */
     public function deleteRoutes() {
         $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         switch($path) {
             case '/todo':
             default:
-                $_DELETE = file_get_contents('php://input');
-                $_DELETE = json_decode($_DELETE);
-                $this->todoIndex = $_DELETE->todoIndex; 
-                if( isset($_DELETE->todoIndex)
-                     && is_numeric($_DELETE->todoIndex) ) {
+                $delete = file_get_contents('php://input');
+                $delete = json_decode($delete);
+                $todoIndex = $delete->todoIndex; 
+                if( isset($delete->todoIndex)
+                     && is_numeric($delete->todoIndex) ) {
                         header('Content-Type: application/json');
-                        $this->todoList = array_filter($this->todoList, 
+                        $todoList = array_filter($todoList, 
+                        function($k){ return($k !== $todoIndex); },
+                        ARRAY_FILTER_USE_KEY );
+                        echo json_encode($todoList); 
+                } else {
+                    header('Content-Type: application/json');
+                    echo json_decode($todoList);
+                }
+        }
+    }
+```
+
+Now As part of our class
+```php
+    /*
+    *   deleteRoutes Handle any delete route requests.
+    */
+    public function deleteRoutes() {
+        $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        switch($path) {
+            case '/todo':
+            default:
+                $delete = file_get_contents('php://input');
+                $delete = json_decode($delete);
+                $this->todoIndex = $delete->todoIndex; 
+                if( isset($delete->todoIndex)
+                     && is_numeric($delete->todoIndex) ) {
+                        header('Content-Type: application/json');
+                        $this->todoList = array_filter($this->todoList,
                         function($k){ return($k !== $this->todoIndex); },
                         ARRAY_FILTER_USE_KEY );
                         echo json_encode($this->todoList); /* We just need to reference our class instance.*/
                 } else {
-                    /* Just show the current todo list .*/
                     header('Content-Type: application/json');
                     echo json_decode($this->todoList);
                 }
         }
     }
-
 ```
 
+Sweet, well we are almost done now, just a little more to go. When need to handle our posted data and our update(PUT) data.
 
+## POST ROUTES
+
+In our next function we add a new todo to our list.
+First we do the logic in a functional programming style.
+```php
+    /*
+     *  postRoutes Handle all of the POST route requests  
+     */
+    function postRoutes() {
+        $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        switch($path) {
+            case '/todo':
+            default:
+                $post = file_get_contents('php://input');
+                $post = json_decode($post);
+                $todo = $_POST->todo; 
+                array_push($todoList, $todo);
+                header('Content-Type: application/json');
+                echo json_decode($todoList);
+        }
+    }
+ ```
+ 
+ Now the same code for our class!
+```php
+    /*
+     *  postRoutes Handle all of the POST route requests  
+     */
+    public function postRoutes() {
+        $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        switch($path) {
+            case '/todo':
+            default:
+                $post = file_get_contents('php://input');
+                $post = json_decode($post);
+                $this->todo = $_POST->todo; 
+                array_push($this->todoList, $this->todo);
+                header('Content-Type: application/json');
+                echo json_decode($this->todoList);
+        }
+    }
+ ```
+ 
+Now we can add our todo's to our todo list. Only thing left to do is update our todo once we have completed it.
+
+```php
+    /*
+    *   putRoutes Handle all PUT route requests
+    */
+    public function putRoutes() {
+        $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        switch($path) {
+            case '/todo':
+            default:
+                $put = file_get_contents('php://input');
+                $put = json_decode($put);
+                $todoIndex = $put->todoIndex;
+                $todoList[$todoIndex]['completed'] = time();
+                header('Content-Type: application/json');
+                echo json_encode($todoList);
+        }
+    }
+```
+and finally our object oriented class method for handling our put requests.
+
+```php
+    /*
+    *   putRoutes Handle all PUT route requests
+    */
+    public function putRoutes() {
+        $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        switch($path) {
+            case '/todo':
+            default:
+                $put = file_get_contents('php://input');
+                $put = json_decode($put);
+                $this->todoIndex = $put->todoIndex;
+                $this->todoList[$this->todoIndex]['completed'] = time();
+                header('Content-Type: application/json');
+                echo json_encode($this->todoList);
+        }
+    }
+```
+ 
+So, now we have the functionality, go head try it for yourself. You will notice, that as of now we dont persist our data! In the next lesson we expand on this lesson and persist our data in a file.
