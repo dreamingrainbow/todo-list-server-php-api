@@ -9,7 +9,7 @@ Like our Express server we need to setup our system to use PHP. So download it a
 lets start by making a directory to host our server in. I'll call ours www and inside it im going to make an index.php file.
 
 ```
-php -S localhost:80 -t www
+php -S localhost:3001 -t www
 ```
 This command get's out local developer server up and running, and serving our www folder.
 
